@@ -10,55 +10,23 @@ import java.util.List;
 @Setter
 public class WeatherResponse {
 
-    // wttr.in returns current_condition as an array
-    @JsonProperty("current_condition")
-    private List<Current> currentList;
-
-    @JsonProperty("nearest_area")
-    private List<NearestArea> nearestArea;
-
-    // Helper method — UserController getCurrent() call karta hai, backward compatible
-    public Current getCurrent() {
-        return (currentList != null && !currentList.isEmpty()) ? currentList.get(0) : null;
-    }
+    private Current current;
+    private Location location;
 
     @Getter
     @Setter
     public static class Current {
+        private int temperature;
 
-        @JsonProperty("temp_C")
-        private String temperature;
+        @JsonProperty("weather_descriptions")
+        private List<String> weatherDescriptions;
 
-        @JsonProperty("FeelsLikeC")
-        private String feelslike;
-
-        @JsonProperty("weatherDesc")
-        private List<WeatherDesc> weatherDescription;
+        private int feelslike;
     }
 
     @Getter
     @Setter
-    public static class WeatherDesc {
-        private String value;
-    }
-
-    @Getter
-    @Setter
-    public static class NearestArea {
-
-        @JsonProperty("areaName")
-        private List<AreaValue> areaName;
-    }
-
-    @Getter
-    @Setter
-    public static class AreaValue {
-        private String value;
+    public static class Location {
+        private String name;
     }
 }
-
-
-
-
-
-

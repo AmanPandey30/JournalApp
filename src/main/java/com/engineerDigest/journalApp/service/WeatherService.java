@@ -1,9 +1,9 @@
 package com.engineerDigest.journalApp.service;
 
 import com.engineerDigest.journalApp.api.response.WeatherResponse;
-import com.engineerDigest.journalApp.cache.AppCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,11 +13,8 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class WeatherService {
 
-    // ✅ wttr.in — Free API, koi API key nahi chahiye
-    private static final String API = "https://wttr.in/<city>?format=j1";
-
-    @Autowired
-    private AppCache appCache;
+    @Value("${weather.api.key}")
+    private String apiKey;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -31,7 +28,7 @@ public class WeatherService {
             return weatherResponse;
         } else {
             try {
-                String finalAPI = appCache.APP_CACHE.get("WEATHER_API").replace("<city>", city);
+                String finalAPI = "http://api.weatherstack.com/current?access_key=" + apiKey + "&query=" + city;
 
                 ResponseEntity<WeatherResponse> response = restTemplate.exchange(finalAPI, HttpMethod.GET, null, WeatherResponse.class);
                 WeatherResponse body = response.getBody();

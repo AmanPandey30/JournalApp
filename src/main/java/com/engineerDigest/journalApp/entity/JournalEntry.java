@@ -1,29 +1,30 @@
 package com.engineerDigest.journalApp.entity;
 
-import com.engineerDigest.journalApp.enums.Sentiment;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Document(collection = "journal_entries")
 @Data
-public class JournalEntry {// this is called the POJO class
+@NoArgsConstructor
+@AllArgsConstructor
+public class JournalEntry {
+
     @Id
+    @JsonSerialize(using = ToStringSerializer.class)  // ObjectId → plain hex string in JSON
     private ObjectId id;
-    @NonNull
+
     private String title;
 
     private String content;
 
     private LocalDateTime date;
-
-    private Sentiment sentiment;
 }
-

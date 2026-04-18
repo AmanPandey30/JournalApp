@@ -16,12 +16,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-//YAHA PAR HUM APNA BUSINESS LOGIC LIKHENGE AUR FIR CONTROLLER KO DENGE JAROORAT PADNE PE
-//controller call karega service aur service repository ko
-//controller--->service--->repository
+// Business logic layer — controller calls service, service calls repository
+// Flow: controller → service → repository
 
 @Service
-@Slf4j  //->private static final Logger logger = LoggerFactory.getLogger(JournalEntryService.class);(iske jagah pe slf4j use karenge)
+@Slf4j
 public class UserService {
 
     @Autowired
@@ -35,7 +34,7 @@ public class UserService {
         try {
             user.setPassWord(passwordEncoder.encode(user.getPassWord()));
             user.setRoles(Arrays.asList("USER"));
-            userRepository.save(user); // Ye line hi database mein data bhejti hai
+            userRepository.save(user);
             return true;
         } catch (Exception e) {
             log.error("Error occurred while saving new user: ", e);
@@ -46,12 +45,17 @@ public class UserService {
     public void saveAdmin(User user){
         user.setPassWord(passwordEncoder.encode(user.getPassWord()));
         user.setRoles(Arrays.asList("USER","ADMIN"));
-        userRepository.save(user); // Ye line hi database mein data bhejti hai
+        userRepository.save(user);
 
     }
 
     public void saveUser(User user){
         userRepository.save(user);
+    }
+
+    /** Password ko BCrypt se encode karo — sirf tab call karo jab naya password aaye */
+    public String encodePassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
     }
 
     public List<User> getAll(){
