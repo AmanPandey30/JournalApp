@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class WeatherService {
 
-    @Value("${weather.api.key}")
+    @Value("${weather.api.key:}")
     private String apiKey;
 
     @Autowired
