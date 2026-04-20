@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import WeatherWidget from './components/WeatherWidget';
 import ProfileModal from './components/ProfileModal';
 import { ActivityHeatmap, SearchBar, ExportButton } from './components/AdvancedFeatures';
+import ChatWidget from './components/ChatWidget';
 import api from './api/api';
 
 
@@ -61,7 +62,9 @@ export default function App() {
   const [isFormOpen,   setIsFormOpen]   = useState(false);
   const [formTitle,    setFormTitle]    = useState('');
   const [formContent,  setFormContent]  = useState('');
+  const [suggestion,   setSuggestion]   = useState('');
   const [saving,       setSaving]       = useState(false);
+  const [isListening,  setIsListening]  = useState(false);
 
 
   const [searchQuery,  setSearchQuery]  = useState('');
@@ -84,6 +87,18 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (loggedIn) fetchEntries(); }, [loggedIn, fetchEntries]);
+
+  // ── Smart Suggestion AI ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!loggedIn || !isFormOpen || formContent.length < 10) { setSuggestion(''); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await api.post('/ai/suggest', { text: formContent });
+        setSuggestion(res.data.suggestion);
+      } catch(e) {}
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [formContent, isFormOpen, loggedIn]);
 
   // ── Auth ───────────────────────────────────────────────────────────────
   const handleLoginSuccess = (name) => { setUsername(name); setLoggedIn(true); };
@@ -119,6 +134,28 @@ export default function App() {
   const handleUpdate = (id, updated) => {
     setEntries(p => p.map(e => e.id === id ? { ...e, ...updated } : e));
   };
+
+  // ── Voice to Text ──────────────────────────────────────────────────────
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      if (window._recognition) window._recognition.stop();
+      setIsListening(false); return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Browser does not support Voice-to-Text.");
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true; recognition.interimResults = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      const finalTranscript = Array.from(event.results)
+        .slice(event.resultIndex).filter(r => r.isFinal)
+        .map(r => r[0].transcript).join(' ');
+      if (finalTranscript) setFormContent(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + finalTranscript);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    window._recognition = recognition; recognition.start();
+  }, [isListening]);
 
   // ── Derived ────────────────────────────────────────────────────────────
   const todayCount = useMemo(() =>
@@ -291,10 +328,20 @@ export default function App() {
                       onChange={e=>setFormTitle(e.target.value)}
                       className="w-full bg-[#080b12] border border-gray-800 p-4 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-purple-500/60 transition-all text-sm font-medium"
                     />
-                    <textarea placeholder={todayPrompt} value={formContent}
-                      onChange={e=>setFormContent(e.target.value)}
-                      className="w-full bg-[#080b12] border border-gray-800 p-4 rounded-2xl h-40 text-white placeholder-gray-700 focus:outline-none focus:border-purple-500/60 transition-all resize-none text-sm leading-relaxed"
-                    />
+                    <div className="relative">
+                      <textarea placeholder={todayPrompt} value={formContent}
+                        onChange={e=>setFormContent(e.target.value)}
+                        className="w-full bg-[#080b12] border border-gray-800 p-4 pr-14 rounded-2xl h-40 text-white placeholder-gray-700 focus:outline-none focus:border-purple-500/60 transition-all resize-none text-sm leading-relaxed"
+                      />
+                      <button onClick={toggleListening} type="button"
+                        className={`absolute bottom-4 right-4 p-2.5 rounded-xl transition-all ${isListening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                        title={isListening ? "Stop listening" : "Start Voice Typing"}>
+                        {isListening ? '🛑' : '🎤'}
+                      </button>
+                    </div>
+                    {suggestion && (
+                      <p className="text-purple-400/80 text-xs italic mt-2 ml-1 animate-fade-in">✨ AI Coach: {suggestion}</p>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 text-xs">{formContent.split(/\s+/).filter(Boolean).length} words</span>
                       <div className="flex gap-3">
@@ -369,7 +416,7 @@ export default function App() {
                         return (
                           <JournalCard key={`e-${eid}`} id={eid} index={i}
                             date={formatDate(entry.date)} title={entry.title}
-                            content={entry.content}
+                            content={entry.content} mood={entry.mood} tags={entry.tags}
                             onDelete={handleDelete} onUpdate={handleUpdate}
                           />
                         );
@@ -443,6 +490,9 @@ export default function App() {
           onUsernameChange={name => { setUsername(name); localStorage.setItem('username', name); }}
         />
       )}
+
+      {/* Floating UI Elements */}
+      {loggedIn && <ChatWidget />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../api/api';
 
-function JournalCard({ id, date, title, content, onDelete, onUpdate, index = 0 }) {
+function JournalCard({ id, date, title, content, mood, tags, onDelete, onUpdate, index = 0 }) {
   const [isEditing, setIsEditing]     = useState(false);
   const [editTitle, setEditTitle]     = useState(title);
   const [editContent, setEditContent] = useState(content);
@@ -76,12 +76,18 @@ function JournalCard({ id, date, title, content, onDelete, onUpdate, index = 0 }
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Date + reading time */}
-            <div className="flex items-center gap-3 mb-2.5">
+            <div className="flex items-center gap-3 mb-2.5 flex-wrap">
               <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest">{date}</span>
               <span className="w-1 h-1 rounded-full bg-gray-700" />
               <span className="text-gray-700 text-[10px]">{readingMin} min read</span>
               <span className="w-1 h-1 rounded-full bg-gray-700" />
               <span className="text-gray-700 text-[10px]">{wordCount} words</span>
+              {mood && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-gray-700" />
+                  <span className="text-[11px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded-full">{mood}</span>
+                </>
+              )}
             </div>
             {/* Title */}
             <h3 className="text-lg font-bold leading-snug group-hover:text-purple-300 transition-colors pr-4">
@@ -94,6 +100,15 @@ function JournalCard({ id, date, title, content, onDelete, onUpdate, index = 0 }
         <p className={`text-gray-400 mt-4 text-sm leading-relaxed transition-all ${isExpanded ? '' : 'line-clamp-3'}`}>
           {content}
         </p>
+
+        {/* Tags */}
+        {tags && tags.length > 0 && (
+          <div className="flex gap-2 mt-4 flex-wrap">
+            {tags.map((tag, i) => (
+              <span key={i} className="text-[10px] text-gray-500 bg-gray-800/50 px-2.5 py-1 rounded-lg">#{tag}</span>
+            ))}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-800/60">
