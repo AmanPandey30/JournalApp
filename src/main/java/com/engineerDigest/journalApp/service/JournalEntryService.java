@@ -24,6 +24,9 @@ public class JournalEntryService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JournalAIEngine aiEngine;
+
     /**
      * Journal entry ko save karo aur user ke entry list mein add karo.
      */
@@ -33,7 +36,11 @@ public class JournalEntryService {
             User user = userService.findByUserName(userName);
             journalEntry.setDate(LocalDateTime.now());
 
-            // ── Step 1: Save the entry immediately so the user doesn't wait ──
+            // ── Step 1: AI Processing before save ──
+            journalEntry.setMood(aiEngine.analyzeMood(journalEntry.getContent()));
+            journalEntry.setTags(aiEngine.extractTags(journalEntry.getContent()));
+
+            // ── Step 2: Save the entry ──
             JournalEntry saved = journalEntryRepository.save(journalEntry);
             user.getJournalEntries().add(saved);
             userService.saveUser(user);
@@ -44,8 +51,12 @@ public class JournalEntryService {
         }
     }
 
-    // ── Simple save (no user context) ─────────────────────────────────────
+    // ── Simple save (no user context) ──
     public void saveEntry(JournalEntry journalEntry) {
+        if(journalEntry.getContent() != null) {
+             journalEntry.setMood(aiEngine.analyzeMood(journalEntry.getContent()));
+             journalEntry.setTags(aiEngine.extractTags(journalEntry.getContent()));
+        }
         journalEntryRepository.save(journalEntry);
     }
 

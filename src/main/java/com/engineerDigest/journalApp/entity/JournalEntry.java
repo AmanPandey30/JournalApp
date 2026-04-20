@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "journal_entries")
 @Data
@@ -27,4 +28,8 @@ public class JournalEntry {
     private String content;
 
     private LocalDateTime date;
+
+    private String mood;
+
+    private List<String> tags;
 }
